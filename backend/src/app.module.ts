@@ -20,7 +20,6 @@ import { OrderController } from './order/order.controller';
       renderPath: '/content/afisha/',
     }),
     DatabaseModule.register(),
-    DatabaseModule,
   ],
   controllers: [FilmsController, OrderController],
   providers: [configProvider, FilmsService, OrderService],

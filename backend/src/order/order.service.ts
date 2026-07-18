@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { orderDTO, ticketDTO } from './dto/order.dto';
 import { FilmsMongoDbRepository } from 'src/repository/films.repository';
 
@@ -10,19 +14,31 @@ export class OrderService {
     orderData: orderDTO,
   ): Promise<{ items: ticketDTO[]; total: number }> {
     const tickets = orderData.tickets;
+
     for (const ticket of tickets) {
-      await this.filmsRepository.findSchedulesById(ticket.film, ticket.session);
+      const schedule = await this.filmsRepository.findSchedulesById(
+        ticket.film,
+        ticket.session,
+      );
+      if (!schedule) {
+        throw new NotFoundException(
+          `Сеанс ${ticket.session} для фильма ${ticket.film} не найден`,
+        );
+      }
       const place = `${ticket.row}:${ticket.seat}`;
-      if (
-        await this.filmsRepository.checkPlace(
-          ticket.film,
-          ticket.session,
-          place,
-        )
-      ) {
+      const isPlaceTaken = await this.filmsRepository.checkPlace(
+        ticket.film,
+        ticket.session,
+        place,
+      );
+      if (isPlaceTaken) {
         throw new BadRequestException(`Место ${place} уже забронировано`);
       }
-      this.filmsRepository.updatePlaces(ticket.film, ticket.session, place);
+      await this.filmsRepository.updatePlaces(
+        ticket.film,
+        ticket.session,
+        place,
+      );
     }
     return { items: tickets, total: tickets.length };
   }

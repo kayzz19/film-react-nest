@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { filmDTO, scheduleDTO } from '../films/dto/films.dto';
@@ -12,6 +12,7 @@ export class FilmsMongoDbRepository {
 
   private getFilmMapFn(): (Film) => filmDTO {
     return (root) => {
+      if (!root) return null;
       return {
         id: root.id,
         rating: root.rating,
@@ -50,21 +51,19 @@ export class FilmsMongoDbRepository {
     };
   }
 
-  async findFilmById(filmId: string): Promise<filmDTO> {
-    try {
-      const film = await this.filmModel.findOne({ id: filmId });
-      const mapper = this.getFilmMapFn();
-      return mapper(film);
-    } catch {
-      throw new NotFoundException(`Фильм с ${filmId} не найден`);
-    }
+  async findFilmById(filmId: string): Promise<filmDTO | null> {
+    const film = await this.filmModel.findOne({ id: filmId });
+    if (!film) return null;
+    return this.getFilmMapFn()(film);
   }
 
   async findAllSchedulesById(
     filmId: string,
-  ): Promise<{ total: number; items: scheduleDTO[] }> {
-    const film = await this.findFilmById(filmId); //используем обычные методы Mongoose-документов
-    const schedule = film.schedule;
+  ): Promise<{ total: number; items: scheduleDTO[] } | null> {
+    const film = await this.findFilmById(filmId);
+    if (!film) return null;
+
+    const schedule = film.schedule || [];
     return {
       total: schedule.length,
       items: schedule.map(this.getScheduleMapFn()),
@@ -73,9 +72,11 @@ export class FilmsMongoDbRepository {
 
   async findScheduleById(
     filmId: string,
-  ): Promise<{ total: number; items: scheduleDTO[] }> {
+  ): Promise<{ total: number; items: scheduleDTO[] } | null> {
     const film = await this.filmModel.findOne({ id: filmId });
-    const schedule = film.schedule;
+    if (!film) return null;
+
+    const schedule = film.schedule || [];
     return {
       total: schedule.length,
       items: schedule.map(this.getScheduleMapFn()),
@@ -85,13 +86,12 @@ export class FilmsMongoDbRepository {
   async findSchedulesById(
     filmId: string,
     scheduleId: string,
-  ): Promise<scheduleDTO> {
-    const { items } = await this.findAllSchedulesById(filmId);
-    const schedule = items.find((el) => el.id === scheduleId);
-    if (!schedule) {
-      throw new NotFoundException(`Сеанса с ${scheduleId} не найден`);
-    }
-    return schedule;
+  ): Promise<scheduleDTO | null> {
+    const schedules = await this.findAllSchedulesById(filmId);
+    if (!schedules) return null;
+
+    const schedule = schedules.items.find((el) => el.id === scheduleId);
+    return schedule || null;
   }
 
   async checkPlace(
