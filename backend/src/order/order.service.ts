@@ -1,44 +1,34 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Inject } from '@nestjs/common';
+import { FilmsMongoDbRepository } from '../repository/filmsMongo.repository';
 import { orderDTO, ticketDTO } from './dto/order.dto';
-import { FilmsMongoDbRepository } from 'src/repository/films.repository';
+import { FilmsPostgreSQLRepository } from '../repository/filmsPostgreSQL.repository';
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly filmsRepository: FilmsMongoDbRepository) {}
+  constructor(
+    @Inject('FILMS_REPOSITORY')
+    private readonly filmsRepository:
+      | FilmsMongoDbRepository
+      | FilmsPostgreSQLRepository,
+  ) {}
 
   async createOrder(
     orderData: orderDTO,
   ): Promise<{ items: ticketDTO[]; total: number }> {
     const tickets = orderData.tickets;
-
     for (const ticket of tickets) {
-      const schedule = await this.filmsRepository.findSchedulesById(
-        ticket.film,
-        ticket.session,
-      );
-      if (!schedule) {
-        throw new NotFoundException(
-          `Сеанс ${ticket.session} для фильма ${ticket.film} не найден`,
-        );
-      }
+      await this.filmsRepository.findSchedulesById(ticket.film, ticket.session);
       const place = `${ticket.row}:${ticket.seat}`;
-      const isPlaceTaken = await this.filmsRepository.checkPlace(
-        ticket.film,
-        ticket.session,
-        place,
-      );
-      if (isPlaceTaken) {
+      if (
+        await this.filmsRepository.checkPlace(
+          ticket.film,
+          ticket.session,
+          place,
+        )
+      ) {
         throw new BadRequestException(`Место ${place} уже забронировано`);
       }
-      await this.filmsRepository.updatePlaces(
-        ticket.film,
-        ticket.session,
-        place,
-      );
+      this.filmsRepository.updatePlaces(ticket.film, ticket.session, place);
     }
     return { items: tickets, total: tickets.length };
   }
