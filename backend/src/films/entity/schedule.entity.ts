@@ -1,35 +1,39 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { ScheduleEntity } from './schedule.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { FilmEntity } from './film.entity';
 
-@Entity('films')
-export class FilmEntity {
-  @PrimaryGeneratedColumn()
+@Entity('schedules')
+export class ScheduleEntity {
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  rating: number;
+  daytime: string;
 
   @Column()
-  director: string;
-
-  @Column('text', { array: true })
-  tags: string;
+  hall: number;
 
   @Column()
-  image: string;
+  rows: number;
 
   @Column()
-  cover: string;
+  seats: number;
 
   @Column()
-  title: string;
+  price: number;
+
+  @Column('text')
+  taken: string;
+
+  @ManyToOne(() => FilmEntity, (film) => film.schedule)
+  @JoinColumn({ name: 'filmId' })
+  film: FilmEntity;
 
   @Column()
-  about: string;
-
-  @Column()
-  description: string;
-
-  @OneToMany(() => ScheduleEntity, (schedule) => schedule.film)
-  schedule: ScheduleEntity[];
+  filmId: string;
 }

@@ -17,6 +17,7 @@ import { applicationConfig } from './app.config.provider';
       isGlobal: true,
       cache: true,
     }),
+    // @todo: Добавьте раздачу статических файлов из public
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, '..', 'public'),
       renderPath: '/content/afisha/',

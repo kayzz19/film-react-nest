@@ -24,7 +24,7 @@ export class FilmsPostgreSQLRepository {
         id: root.id,
         rating: root.rating,
         director: root.director,
-        tags: root.tags,
+        tags: root.tags ? root.tags.split(',') : [],
         image: root.image,
         cover: root.cover,
         title: root.title,
@@ -44,7 +44,7 @@ export class FilmsPostgreSQLRepository {
         rows: root.rows,
         seats: root.seats,
         price: root.price,
-        taken: root.taken,
+        taken: root.taken ? root.taken.split(',') : [],
       };
     };
   }
