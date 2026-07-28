@@ -31,11 +31,9 @@ export class DatabaseModule {
         imports.push(
           TypeOrmModule.forRoot({
             type: 'postgres',
-            host: applicationConfig.DATABASE_HOST,
-            port: +applicationConfig.DATABASE_PORT,
+            url: applicationConfig.DATABASE_URL,
             username: applicationConfig.DATABASE_USERNAME,
             password: applicationConfig.DATABASE_PASSWORD,
-            database: applicationConfig.DATABASE_NAME,
             entities: [FilmEntity, ScheduleEntity],
             synchronize: false,
           }),

@@ -28,7 +28,11 @@ export class OrderService {
       ) {
         throw new BadRequestException(`Место ${place} уже забронировано`);
       }
-      this.filmsRepository.updatePlaces(ticket.film, ticket.session, place);
+      await this.filmsRepository.updatePlaces(
+        ticket.film,
+        ticket.session,
+        place,
+      );
     }
     return { items: tickets, total: tickets.length };
   }
