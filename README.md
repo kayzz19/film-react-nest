@@ -2,35 +2,77 @@
 
 ## Установка
 
-### MongoDB
+### PostgreSQL
 
-Установите MongoDB скачав дистрибутив с официального сайта или с помощью пакетного менеджера вашей ОС. Также можно воспользоваться Docker (см. ветку `feat/docker`.
+Установите PostgreSQL любым удобным способом (с официального сайта или через пакетный менеджер).
 
-Выполните скрипт `test/mongodb_initial_stub.js` в консоли `mongo`.
+Создайте базу данных и выполните SQL-скрипты из папки `test`:
+
+```
+prac.init.sql
+prac.films.sql
+prac.schedule.sql
+```
 
 ### Бэкенд
 
-Перейдите в папку с исходным кодом бэкенда
+Перейдите в папку проекта:
 
-`cd backend`
+```bash
+cd backend
+```
 
-Установите зависимости (точно такие же, как в package-lock.json) помощью команд
+Установите зависимости:
 
-`npm ci` или `yarn install --frozen-lockfile`
+```bash
+npm install
+```
 
-Создайте `.env` файл из примера `.env.example`, в нём укажите:
+Создайте файл `.env` на основе `.env.example`.
 
-* `DATABASE_DRIVER` - тип драйвера СУБД - в нашем случае это `mongodb` 
-* `DATABASE_URL` - адрес СУБД MongoDB, например `mongodb://127.0.0.1:27017/practicum`.  
+Укажите параметры подключения к PostgreSQL:
 
-MongoDB должна быть установлена и запущена.
+```env
+DATABASE_URL=postgres://username:password@localhost:5432/practicum
+PORT=3000
+```
 
-Запустите бэкенд:
+где:
 
-`npm start:debug`
+- `username` — имя пользователя PostgreSQL;
+- `password` — пароль пользователя;
+- `localhost` — адрес сервера PostgreSQL;
+- `5432` — порт PostgreSQL;
+- `practicum` — название базы данных.
 
-Для проверки отправьте тестовый запрос с помощью Postman или `curl`.
+После этого запустите сервер:
 
+```bash
+npm run start:dev
+```
 
+или
 
+```bash
+npm run start
+```
 
+API будет доступно по адресу
+
+```
+http://localhost:3000/api/afisha
+```
+
+## Используемые технологии
+
+- NestJS
+- TypeScript
+- TypeORM
+- PostgreSQL
+
+## Сборка проекта
+
+```bash
+cd backend
+npm run build
+```

@@ -1,39 +1,71 @@
-import { Injectable, BadRequestException, Inject } from '@nestjs/common';
-import { FilmsMongoDbRepository } from '../repository/filmsMongo.repository';
-import { orderDTO, ticketDTO } from './dto/order.dto';
-import { FilmsPostgreSQLRepository } from '../repository/filmsPostgreSQL.repository';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
+
+import { randomUUID } from 'crypto';
+
+import { FilmsRepository } from '../repository/films.repository';
+import { OrderDTO } from './dto/order.dto';
 
 @Injectable()
 export class OrderService {
   constructor(
     @Inject('FILMS_REPOSITORY')
-    private readonly filmsRepository:
-      | FilmsMongoDbRepository
-      | FilmsPostgreSQLRepository,
+    private readonly filmsRepository: FilmsRepository,
   ) {}
 
   async createOrder(
-    orderData: orderDTO,
-  ): Promise<{ items: ticketDTO[]; total: number }> {
-    const tickets = orderData.tickets;
-    for (const ticket of tickets) {
-      await this.filmsRepository.findSchedulesById(ticket.film, ticket.session);
+    orderData: OrderDTO,
+  ): Promise<{ items: unknown[]; total: number }> {
+    const bookedPlaces = new Set<string>();
+
+    for (const ticket of orderData.tickets) {
+      await this.filmsRepository.findSchedulesById(
+        ticket.film,
+        ticket.session,
+      );
+
       const place = `${ticket.row}:${ticket.seat}`;
-      if (
-        await this.filmsRepository.checkPlace(
-          ticket.film,
-          ticket.session,
-          place,
-        )
-      ) {
-        throw new BadRequestException(`Место ${place} уже забронировано`);
+
+      if (bookedPlaces.has(place)) {
+        throw new BadRequestException(
+          `Место ${place} повторяется в заказе`,
+        );
       }
-      await this.filmsRepository.updatePlaces(
+
+      bookedPlaces.add(place);
+
+      const taken = await this.filmsRepository.checkPlace(
         ticket.film,
         ticket.session,
         place,
       );
+
+      if (taken) {
+        throw new BadRequestException(
+          `Место ${place} уже занято`,
+        );
+      }
     }
-    return { items: tickets, total: tickets.length };
+
+    for (const ticket of orderData.tickets) {
+      await this.filmsRepository.updatePlaces(
+        ticket.film,
+        ticket.session,
+        `${ticket.row}:${ticket.seat}`,
+      );
+    }
+
+    const items = orderData.tickets.map((ticket) => ({
+      id: randomUUID(),
+      ...ticket,
+    }));
+
+    return {
+      total: items.length,
+      items,
+    };
   }
 }

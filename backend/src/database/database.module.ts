@@ -1,56 +1,46 @@
-import { Module, DynamicModule } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { FilmsMongoDbRepository } from '../repository/filmsMongo.repository';
-import { FilmsPostgreSQLRepository } from '../repository/filmsPostgreSQL.repository';
-import { applicationConfig } from '../app.config.provider';
-import { Film, FilmSchema } from '../films/schema/films.schema';
+import { DynamicModule, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ScheduleEntity } from '../films/entity/schedule.entity';
+
 import { FilmEntity } from '../films/entity/film.entity';
+import { ScheduleEntity } from '../films/entity/schedule.entity';
+
+import { FilmsPostgreSQLRepository } from '../repository/filmsPostgreSQL.repository';
 
 @Module({})
 export class DatabaseModule {
-  static register(dbms: string): DynamicModule {
-    const providers = [];
-    const imports = [];
-
-    switch (dbms) {
-      case 'mongodb':
-        imports.push(MongooseModule.forRoot(applicationConfig.DATABASE_URL));
-        imports.push(
-          MongooseModule.forFeature([{ name: Film.name, schema: FilmSchema }]),
-        );
-        providers.push({
-          provide: 'FILMS_REPOSITORY',
-          useClass: FilmsMongoDbRepository,
-        });
-        providers.push(FilmsMongoDbRepository);
-        break;
-
-      case 'postgres':
-        imports.push(
-          TypeOrmModule.forRoot({
-            type: 'postgres',
-            url: applicationConfig.DATABASE_URL,
-            username: applicationConfig.DATABASE_USERNAME,
-            password: applicationConfig.DATABASE_PASSWORD,
-            entities: [FilmEntity, ScheduleEntity],
-            synchronize: false,
-          }),
-        );
-        imports.push(TypeOrmModule.forFeature([FilmEntity, ScheduleEntity]));
-        providers.push({
-          provide: 'FILMS_REPOSITORY',
-          useClass: FilmsPostgreSQLRepository,
-        });
-        providers.push(FilmsPostgreSQLRepository);
-        break;
-    }
+  static registerAsync(): DynamicModule {
     return {
       module: DatabaseModule,
-      imports: imports,
-      providers: providers,
-      exports: providers,
+
+      imports: [
+        ConfigModule,
+
+        TypeOrmModule.forRootAsync({
+          inject: [ConfigService],
+          useFactory: (config: ConfigService) => ({
+            type: 'postgres',
+
+            url: config.getOrThrow<string>('DATABASE_URL'),
+
+            entities: [FilmEntity, ScheduleEntity],
+
+            synchronize: false,
+          }),
+        }),
+
+        TypeOrmModule.forFeature([FilmEntity, ScheduleEntity]),
+      ],
+
+      providers: [
+        FilmsPostgreSQLRepository,
+        {
+          provide: 'FILMS_REPOSITORY',
+          useClass: FilmsPostgreSQLRepository,
+        },
+      ],
+
+      exports: ['FILMS_REPOSITORY'],
     };
   }
 }
