@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   backend:
-    image: ghcr.io/kayZz19/film-react-nest/backend:latest
+    image: ghcr.io/kayzz19/film-react-nest/backend:latest
     container_name: backend
     env_file: ./backend/.env.prod
     restart: "unless-stopped"
@@ -28,7 +28,7 @@ services:
       - dbnetwork
 
   frontend:
-    image: ghcr.io/kayZz19/film-react-nest/frontend:latest
+    image: ghcr.io/kayzz19/film-react-nest/frontend:latest
     container_name: frontend
     networks:
       - frontnetwork
