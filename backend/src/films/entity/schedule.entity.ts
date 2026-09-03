@@ -6,7 +6,6 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { FilmEntity } from './film.entity';
-import { IsNumber } from 'class-validator';
 
 @Entity('schedules')
 export class ScheduleEntity {

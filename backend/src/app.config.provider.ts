@@ -1,21 +1,21 @@
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
+
+export const applicationConfig = process.env;
 
 export const configProvider = {
-  imports: [ConfigModule],
+  imports: [ConfigModule.forRoot()],
   provide: 'CONFIG',
-  inject: [ConfigService],
-  useFactory: (configService: ConfigService): AppConfig => ({
+  useValue: <AppConfig>{
+    //TODO прочесть переменнные среды
     database: {
-      driver: configService.getOrThrow<string>('DATABASE_DRIVER'),
-      url: configService.getOrThrow<string>('DATABASE_URL'),
+      driver: applicationConfig.DATABASE_DRIVER,
+      url: applicationConfig.DATABASE_URL,
     },
-    port: configService.get<number>('PORT') ?? 3000,
-  }),
+  },
 };
 
 export interface AppConfig {
   database: AppConfigDatabase;
-  port: number;
 }
 
 export interface AppConfigDatabase {

@@ -1,12 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
-
-import { FilmsRepository } from '../repository/films.repository';
+import { Injectable, Inject } from '@nestjs/common';
+import { FilmsMongoDbRepository } from '../repository/filmsMongo.repository';
+import { FilmsPostgreSQLRepository } from '../repository/filmsPostgreSQL.repository';
 
 @Injectable()
 export class FilmsService {
   constructor(
     @Inject('FILMS_REPOSITORY')
-    private readonly filmsRepository: FilmsRepository,
+    private readonly filmsRepository:
+      | FilmsMongoDbRepository
+      | FilmsPostgreSQLRepository,
   ) {}
 
   async getAllFilms() {
@@ -14,6 +16,6 @@ export class FilmsService {
   }
 
   async getScheduleFilm(id: string) {
-    return this.filmsRepository.findAllSchedulesById(id);
+    return await this.filmsRepository.findAllSchedulesById(id);
   }
 }

@@ -1,71 +1,23 @@
-import {
-  IsArray,
-  IsInt,
-  IsNumber,
-  IsString,
-  Min,
-  ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-
-export class ScheduleDTO {
-  @IsString()
+//TODO описать DTO для запросов к /films
+export class filmDTO {
   id: string;
-
-  @IsString()
-  daytime: string;
-
-  @IsInt()
-  @Min(1)
-  hall: number;
-
-  @IsInt()
-  @Min(1)
-  rows: number;
-
-  @IsInt()
-  @Min(1)
-  seats: number;
-
-  @IsNumber()
-  @Min(0)
-  price: number;
-
-  @IsArray()
-  taken: string[];
+  rating: number;
+  director: string;
+  tags: string[];
+  image: string;
+  cover: string;
+  title: string;
+  about: string;
+  description: string;
+  schedule: scheduleDTO[];
 }
 
-export class FilmDTO {
-  @IsString()
+export class scheduleDTO {
   id: string;
-
-  @IsNumber()
-  @Min(0)
-  rating: number;
-
-  @IsString()
-  director: string;
-
-  @IsArray()
-  tags: string[];
-
-  @IsString()
-  image: string;
-
-  @IsString()
-  cover: string;
-
-  @IsString()
-  title: string;
-
-  @IsString()
-  about: string;
-
-  @IsString()
-  description: string;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ScheduleDTO)
-  schedule: ScheduleDTO[];
+  daytime: Date;
+  hall: string;
+  rows: number;
+  seats: number;
+  price: number;
+  taken: string[];
 }
